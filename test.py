@@ -10,7 +10,9 @@ proj.directory-list = [{'dirloc': loc('../../../Documents/WS'),
                         'include_hidden': False,
                         'recursive': True,
                         'watch_for_changes': True}]
-proj.file-type = 'shared'
+### delte this file
+
+
 Redshift:
     user : "hang"
     pw : "Woaijianada1026+"
