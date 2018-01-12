@@ -11,3 +11,10 @@ proj.directory-list = [{'dirloc': loc('../../../Documents/WS'),
                         'recursive': True,
                         'watch_for_changes': True}]
 proj.file-type = 'shared'
+Redshift:
+    user : "hang"
+    pw : "Woaijianada1026+"
+    host : "pantheon-dw.c9qtpydth0xz.us-east-1.redshift.amazonaws.com"
+    port : "5439"
+    db : "production"
+
