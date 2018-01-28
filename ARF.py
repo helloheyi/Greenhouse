@@ -172,7 +172,7 @@ if __name__ == "__main__":
                 data = pd.read_csv(extract_file_name, header = None)
                 data.to_csv('Halal_'+filename[0:8]+'.csv')
                 clean_data('Halal_'+filename[0:8]+'.csv')
-                send_email('yhe@wealthsimple.com', 'Again8258','Halal_'+filename[0:8]+'.csv')
+                send_email('yhe@wealthsimple.com', 'xxxxx','Halal_'+filename[0:8]+'.csv')
                 file = [filename,extract_file_name,'CA.csv','US.csv','Halal_'+filename[0:8]+'.csv']
                 n = len(file)
                 for kk in range(0,n):
