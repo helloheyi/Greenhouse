@@ -1,0 +1,705 @@
+<head>
+    <meta charset="UTF-8">
+    <title>Citi Bike Aggregated Trip Data with Toggle Controls</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8ff;
+            justify-content: center;
+        }
+        
+        #chart-title {
+            color: #4B0082;
+            font-weight: bold;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px #aaa;
+            text-align: center;
+        }
+
+        .control-container {
+            display: none;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: inline-flex;
+            flex-direction: column;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f3e6ff;
+        }
+
+        .control-group label {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #333;
+        }
+
+        .button-container {
+            margin-bottom: 15px;
+        }
+
+        input[type="radio"],
+        input[type="checkbox"] {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .legend {
+            font-size: 14px;
+        }
+
+        .legend rect {
+            stroke-width: 1;
+            stroke: black;
+        }
+
+        /* Tooltip styles */
+        #tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font: 12px Arial, sans-serif;
+            background: lightsteelblue;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* the gear icon */
+        .gear-icon {
+            font-size: 40px;
+            color: #4B0082;
+            filter: drop-shadow(2px 4px 6px #aaa);
+            cursor: pointer;
+            position: absolute;
+            left: 0px;
+            bottom: 0px;
+            z-index: 20;
+        }
+
+        .gear-icon:hover {
+            transform: rotate(20deg);
+            transition: transform 0.5s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="tooltip"></div>
+    
+    <h2 id="chart-title">Citi Bike Aggregated Trip Data by Month with Number of Rides</h2>
+    
+    <div class="chart-container">
+            <svg></svg>
+            <div class="gear-icon" onclick="toggleControls()">⚙</div>
+    </div>
+
+    <div class="control-container">
+        <div class="control-group">
+            <label><input type="checkbox" id="toggle-line"> Moving Average Line</label>
+        </div>
+
+        <div class="control-group">
+            <label>Y Axis:</label>
+            <label><input type="radio" name="yAxisOption" value="number_of_rides" checked> Rides</label>
+            <label><input type="radio" name="yAxisOption" value="trip_duration"> Time Duration</label>
+            <label><input type="radio" name="yAxisOption" value="trip_distance"> Distance</label>
+        </div>
+
+        <div class="control-group">
+            <label>Aggregation:</label>
+            <label><input type="radio" name="aggregationOption" value="overall" checked> Overall Aggregated Data</label>
+            <label><input type="radio" name="aggregationOption" value="rideable_type"> Rideable Type</label>
+            <label><input type="radio" name="aggregationOption" value="membership_type"> Membership</label>
+        </div>
+
+        <div class="control-group">
+            <label for="timeRangeSelect">Select Time Range:</label>
+            <select id="timeRangeSelect">
+                <option value="all" selected>All Data</option>
+                <option value="1y">Last 1 Year</option>
+                <option value="2y">Last 2 Years</option>
+            </select>
+        </div>
+    </div>
+
+
+
+    <script>
+        const margin = { top: 50, right: 250, bottom: 70, left: 60 };
+        const width = 900 - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        const svg = d3.select("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // tooltip div
+        const tooltip = d3.select("#tooltip");
+
+        function toggleControls() {
+            const controlContainer = document.querySelector('.control-container');
+            if (controlContainer.style.display === 'none' || controlContainer.style.display === '') {
+                controlContainer.style.display = 'flex';
+            } else {
+                controlContainer.style.display = 'none';
+            }
+        }
+
+
+
+        // Haversine formula to calculate distance between two points
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const toRad = (angle) => angle * Math.PI / 180;
+
+            const R = 6371;
+
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+
+            const a = Math.sin(dLat / 2) ** 2 +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLon / 2) ** 2;
+
+            const c = 2 * Math.asin(Math.sqrt(a));
+
+            return R * c;
+        }
+        
+        // initialize variables for current selections
+        let currentData;
+        let currentYLabel = 'Number of Rides';
+        let currentTimeRange = 'all';
+        const timeRangeSelect = document.getElementById('timeRangeSelect');
+        
+
+        
+        
+        // Dataset
+        d3.csv("/static/CitiBikedata.csv").then(data => {
+            data.forEach(d => {
+                d.started_at = new Date(d.started_at);
+                d.ended_at = new Date(d.ended_at);
+                d.trip_duration = +d.trip_duration;
+
+                d.start_lat = parseFloat(d['start_lat']);
+                d.start_lon = parseFloat(d['start_lng']);
+                d.end_lat = parseFloat(d['end_lat']);
+                d.end_lon = parseFloat(d['end_lng']);
+
+                d.trip_distance = haversineDistance(d.start_lat, d.start_lon, d.end_lat, d.end_lon);
+            });
+
+            const groupData = (aggregationField) => {
+                let groupedData;
+                if (aggregationField === 'number_of_rides') {
+                    groupedData = d3.rollup(data,
+                        v => v.length,
+                        d => d3.timeMonth(d.started_at)
+                    );
+                } else {
+                    groupedData = d3.rollup(data,
+                        v => d3.sum(v, d => d[aggregationField]),
+                        d => d3.timeMonth(d.started_at)
+                    );
+                }
+
+                const aggregatedData = Array.from(groupedData, ([key, value]) => ({
+                    year_month: new Date(key),
+                    value: value
+                }));
+
+                aggregatedData.sort((a, b) => d3.ascending(a.year_month, b.year_month));
+
+                aggregatedData.forEach((d, i, arr) => {
+                    if (i >= 5) {
+                        d.moving_avg = d3.mean(arr.slice(i - 5, i + 1), d => d.value);
+                    } else {
+                        d.moving_avg = NaN;
+                    }
+                });
+
+                return aggregatedData;
+            };
+
+            // rideable feature
+            const groupDataByRideableType = (aggregationField) => {
+                let groupedData;
+                if (aggregationField === 'number_of_rides') {
+                    groupedData = d3.rollup(data,
+                        v => v.length,
+                        d => d.rideable_type,
+                        d => d3.timeMonth(d.started_at)
+                    );
+                } else {
+                    groupedData = d3.rollup(data,
+                        v => d3.sum(v, d => d[aggregationField]),
+                        d => d.rideable_type,
+                        d => d3.timeMonth(d.started_at)
+                    );
+                }
+
+                const aggregatedData = [];
+
+                groupedData.forEach((value, rideable_type) => {
+                    const typeData = Array.from(value, ([date, val]) => ({
+                        rideable_type: rideable_type,
+                        year_month: new Date(date),
+                        value: val
+                    }));
+
+                    typeData.sort((a, b) => d3.ascending(a.year_month, b.year_month));
+
+                    typeData.forEach((d, i, arr) => {
+                        if (i >= 5) {
+                            d.moving_avg = d3.mean(arr.slice(i - 5, i + 1), d => d.value);
+                        } else {
+                            d.moving_avg = NaN;
+                        }
+                    });
+
+                    aggregatedData.push(...typeData);
+                });
+
+                return aggregatedData;
+            };
+
+            // membership type
+            const groupDataByMembershipType = (aggregationField) => {
+                let groupedData;
+                if (aggregationField === 'number_of_rides') {
+                    groupedData = d3.rollup(data,
+                        v => v.length,
+                        d => d.member_casual,
+                        d => d3.timeMonth(d.started_at)
+                    );
+                } else {
+                    groupedData = d3.rollup(data,
+                        v => d3.sum(v, d => d[aggregationField]),
+                        d => d.member_casual,
+                        d => d3.timeMonth(d.started_at)
+                    );
+                }
+
+                const aggregatedData = [];
+
+                groupedData.forEach((value, member_casual) => {
+                    const typeData = Array.from(value, ([date, val]) => ({
+                        member_casual: member_casual,
+                        year_month: new Date(date),
+                        value: val
+                    }));
+
+                    typeData.sort((a, b) => d3.ascending(a.year_month, b.year_month));
+
+                    typeData.forEach((d, i, arr) => {
+                        if (i >= 5) {
+                            d.moving_avg = d3.mean(arr.slice(i - 5, i + 1), d => d.value);
+                        } else {
+                            d.moving_avg = NaN;
+                        }
+                    });
+
+                    aggregatedData.push(...typeData);
+                });
+
+                return aggregatedData;
+            };
+
+            const aggregatedNumberOfRides = groupData('number_of_rides');
+            const aggregatedTripDuration = groupData('trip_duration');
+            const aggregatedTripDistance = groupData('trip_distance');
+
+            const aggregatedRideableRides = groupDataByRideableType('number_of_rides');
+            const aggregatedRideableDuration = groupDataByRideableType('trip_duration');
+            const aggregatedRideableDistance = groupDataByRideableType('trip_distance');
+
+            const aggregatedMembershipRides = groupDataByMembershipType('number_of_rides');
+            const aggregatedMembershipDuration = groupDataByMembershipType('trip_duration');
+            const aggregatedMembershipDistance = groupDataByMembershipType('trip_distance');
+
+            const rideableTypes = Array.from(new Set(data.map(d => d.rideable_type)));
+
+            const membershipTypes = Array.from(new Set(data.map(d => d.member_casual)));
+
+            const colorScale = d3.scaleOrdinal()
+                .domain(rideableTypes)
+                .range(d3.schemeSet2);
+                
+            const membershipColorScale = d3.scaleOrdinal()
+                .domain(membershipTypes)
+                .range(d3.schemeSet2);
+                
+            const x = d3.scaleTime()
+                .domain(d3.extent(aggregatedNumberOfRides, d => d.year_month))
+                .range([0, width]);
+
+            let y = d3.scaleLinear()
+                .domain([0, d3.max(aggregatedNumberOfRides, d => d.value)]).nice()
+                .range([height, 0]);
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .attr("class", "x-axis")
+                .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%b '%y")));
+
+            svg.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y));
+
+            const updateScales = (data, yDomain = null, yLabel = '') => {
+                x.domain(d3.extent(data, d => d.year_month));
+                svg.select(".x-axis")
+                    .transition().duration(1000)
+                    .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%b '%y")));
+                svg.selectAll(".x-axis-label").remove();
+                svg.append("text")
+                    .attr("class", "x-axis-label")
+                    .attr("x", width / 2)
+                    .attr("y", height + margin.bottom - 20)
+                    .attr("text-anchor", "middle")
+                    .text("Date");
+
+                if (yDomain) {
+                    y.domain(yDomain).nice();
+                } else {
+                    y.domain([0, d3.max(data, d => d.value)]).nice();
+                }
+                svg.select(".y-axis")
+                    .transition().duration(1000)
+                    .call(d3.axisLeft(y));
+
+                svg.selectAll(".y-axis-label").remove();
+                svg.append("text")
+                    .attr("class", "y-axis-label")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", -margin.left + 15)
+                    .attr("x", -height / 2)
+                    .attr("text-anchor", "middle")
+                    .text(yLabel);
+            };
+
+            function addGridLines(x, y) {
+                svg.selectAll(".x-axis-grid").remove();
+                svg.selectAll(".y-axis-grid").remove();
+
+                const xAxis = d3.axisBottom(x)
+                    .tickFormat(d3.timeFormat("%b '%y"))
+                    .ticks(d3.timeYear.every(1))
+                    .tickSize(-height)
+                    .tickPadding(10);
+
+                svg.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .attr("class", "x-axis-grid")
+                    .call(xAxis)
+                    .selectAll(".tick line")
+                    .attr("stroke", "#e0e0e0")
+                    .attr("stroke-opacity", 0.6)
+                    .attr("stroke-dasharray", "5, 5");
+
+                // y Axis with Grid Lines
+                const yAxis = d3.axisLeft(y)
+                    .ticks(5)
+                    .tickSize(-width)
+                    .tickPadding(10);
+
+                svg.append("g")
+                    .attr("class", "y-axis-grid")
+                    .call(yAxis)
+                    .selectAll(".tick line")
+                    .attr("stroke", "#e0e0e0")
+                    .attr("stroke-opacity", 0.6)
+                    .attr("stroke-dasharray", "5, 5"); 
+            }
+
+            
+            
+            function drawBars(data) {
+                svg.selectAll(".bar").remove();
+                svg.selectAll(".layer").remove();
+                svg.selectAll(".legend").remove();
+
+                const bars = svg.selectAll(".bar")
+                    .data(data, d => d.year_month);
+
+                bars.enter()
+                    .append("rect")
+                    .attr("class", "bar")
+                    .attr("x", d => x(d.year_month))
+                    .attr("y", d => y(d.value))
+                    .attr("rx", 4)
+                    .attr("ry", 4)
+                    .attr("height", d => height - y(d.value))
+                    .attr("width", Math.max(1, width / data.length - 4))
+                    .attr("fill", "steelblue")
+                    .style("filter", "url(#drop-shadow)")
+                    .on("mouseover", function(event, d) {
+                        tooltip.style("opacity", 1);
+                        d3.select(this).attr("fill", "orange");
+                    })
+                    .on("mousemove", function(event, d) {
+                        tooltip.html(`<strong>Date:</strong> ${d3.timeFormat("%B %Y")(d.year_month)}<br>
+                                      <strong>Value:</strong> ${d.value.toLocaleString()}`)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        tooltip.style("opacity", 0);
+                        d3.select(this).attr("fill", "steelblue");
+                    });
+            }
+
+            function drawLine(data, isGrouped = false, colorScale = null, groupingField = null) {
+                svg.selectAll(".line").remove();
+
+                if (isGrouped) {
+                    const dataNest = d3.groups(data, d => d[groupingField]);
+
+                    dataNest.forEach(([key, values]) => {
+                        const line = d3.line()
+                            .x(d => x(d.year_month))
+                            .y(d => y(d.moving_avg))
+                            .defined(d => !isNaN(d.moving_avg));
+
+                        svg.append("path")
+                            .datum(values)
+                            .attr("class", "line")
+                            .attr("d", line)
+                            .attr("fill", "none")
+                            .attr("stroke", colorScale(key))
+                            .attr("stroke-width", 3);
+                    });
+                } else {
+                    const line = d3.line()
+                        .x(d => x(d.year_month))
+                        .y(d => y(d.moving_avg))
+                        .defined(d => !isNaN(d.moving_avg));
+
+                    svg.append("path")
+                        .datum(data)
+                        .attr("class", "line")
+                        .attr("d", line)
+                        .attr("fill", "none")
+                        .attr("stroke", "black")
+                        .attr("stroke-width", 2)
+                        .attr("filter", "url(#glow)");
+                }
+            }
+
+            const drawStackedBars = (data, groupKeys, colorScale, groupingField) => {
+                const nestedData = d3.groups(data, d => d.year_month);
+                const stack = d3.stack()
+                    .keys(groupKeys)
+                    .value((d, key) => {
+                        const typeData = d[1].find(x => x[groupingField] === key);
+                        return typeData ? typeData.value : 0;
+                    });
+
+                const series = stack(nestedData);
+
+                const yMax = d3.max(series, d => d3.max(d, d => d[1]));
+                updateScales(data, [0, yMax], currentYLabel);
+                svg.selectAll(".layer").remove();
+                svg.selectAll(".bar").remove();
+                svg.selectAll(".line").remove();
+                svg.selectAll(".legend").remove();
+
+                const layers = svg.selectAll(".layer")
+                    .data(series, d => d.key)
+                    .enter()
+                    .append("g")
+                    .attr("class", "layer")
+                    .attr("fill", d => colorScale(d.key));
+
+                layers.selectAll("rect")
+                    .data(d => d, d => d.data[0])
+                    .enter()
+                    .append("rect")
+                    .attr("x", d => x(d.data[0]))
+                    .attr("y", d => y(d[1]))
+                    .attr("rx", 4)
+                    .attr("ry", 4)
+                    .attr("height", d => y(d[0]) - y(d[1]))
+                    .attr("width", Math.max(1, width / nestedData.length - 4))
+                    .on("mouseover", function(event, d) {
+                        tooltip.style("opacity", 1);
+                        d3.select(this).attr("stroke", "black");
+                    })
+                    .on("mousemove", function(event, d) {
+                        const groupKey = this.parentNode.__data__.key;
+                        const date = d3.timeFormat("%B %Y")(d.data[0]);
+                        const value = (d[1] - d[0]).toLocaleString();
+
+                        tooltip.html(`<strong>${groupingField.replace('_', ' ')}:</strong> ${groupKey}<br>
+                                      <strong>Date:</strong> ${date}<br>
+                                      <strong>Value:</strong> ${value}`)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        tooltip.style("opacity", 0);
+                        d3.select(this).attr("stroke", "none");
+                    });
+
+                const legend = svg.selectAll(".legend")
+                    .data(groupKeys)
+                    .enter()
+                    .append("g")
+                    .attr("class", "legend")
+                    .attr("transform", (d, i) => `translate(${width + 50}, ${i * 25})`);
+
+                legend.append("rect")
+             
+                    .attr("rx", 4)
+                    .attr("ry", 4)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .style("fill", d => colorScale(d));
+
+                legend.append("text")
+                    .attr("x", 24)
+                    .attr("y", 13)
+                    .text(d => d);
+            };
+
+            // filter data based on selected time range
+            function filterDataByTimeRange(data) {
+                const now = new Date();
+                let filteredData;
+
+                if (currentTimeRange === '1y') {
+                    const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+                    filteredData = data.filter(d => d.year_month >= oneYearAgo && d.year_month <= now);
+                } else if (currentTimeRange === '2y') {
+                    const twoYearsAgo = new Date(now.getFullYear() - 2, now.getMonth(), 1);
+                    filteredData = data.filter(d => d.year_month >= twoYearsAgo && d.year_month <= now);
+                } else {
+                    // 'all' selected, use all data
+                    filteredData = data;
+                }
+
+                return filteredData;
+            }
+
+            // update the chart based on current selections
+            function updateChart() {
+                const currentAggregation = document.querySelector('input[name="yAxisOption"]:checked').value;
+                const aggregationMode = document.querySelector('input[name="aggregationOption"]:checked').value;
+                const isLineChecked = document.getElementById('toggle-line').checked;
+
+                if (currentAggregation === 'number_of_rides') {
+                    currentYLabel = 'Number of Rides';
+                } else if (currentAggregation === 'trip_duration') {
+                    currentYLabel = 'Total Duration (Seconds)';
+                } else if (currentAggregation === 'trip_distance') {
+                    currentYLabel = 'Total Distance (Kilometers)';
+                }
+
+                // chart title with the selected Y-axis label and time range
+                const titleElement = document.getElementById('chart-title');
+                let timeRangeText = '';
+                if (currentTimeRange === '1y') {
+                    timeRangeText = ' (Last 1 Year)';
+                } else if (currentTimeRange === '2y') {
+                    timeRangeText = ' (Last 2 Years)';
+                } else {
+                    timeRangeText = ' (All Data)';
+                }
+                titleElement.textContent = `Citi Bike Aggregated Trip Data by Month with ${currentYLabel}${timeRangeText}`;
+
+
+                if (aggregationMode === 'overall') {
+                    currentData = groupData(currentAggregation);
+                } else if (aggregationMode === 'rideable_type') {
+                    currentData = groupDataByRideableType(currentAggregation);
+                } else if (aggregationMode === 'membership_type') {
+                    currentData = groupDataByMembershipType(currentAggregation);
+                }
+
+                currentData = filterDataByTimeRange(currentData);
+
+                if (aggregationMode === 'overall') {
+                    updateScales(currentData, null, currentYLabel);
+                    drawBars(currentData);
+
+                    if (isLineChecked) {
+                        drawLine(currentData);
+                    } else {
+                        svg.selectAll(".line").remove();
+                    }
+
+                    svg.selectAll(".legend").remove();
+                } else if (aggregationMode === 'rideable_type') {
+                    const groupKeys = rideableTypes;
+                    const color = colorScale;
+                    const groupingField = 'rideable_type';
+
+                    drawStackedBars(currentData, groupKeys, color, groupingField);
+
+                    if (isLineChecked) {
+                        drawLine(currentData, true, color, groupingField);
+                    } else {
+                        svg.selectAll(".line").remove();
+                    }
+                } else if (aggregationMode === 'membership_type') {
+                    const groupKeys = membershipTypes;
+                    const color = membershipColorScale;
+                    const groupingField = 'member_casual';
+
+                    drawStackedBars(currentData, groupKeys, color, groupingField);
+
+                    if (isLineChecked) {
+                        drawLine(currentData, true, color, groupingField);
+                    } else {
+                        svg.selectAll(".line").remove();
+                    }
+                }
+            }
+            
+                
+            //  chart rendering
+            currentData = groupData('number_of_rides');
+            currentData = filterDataByTimeRange(currentData);
+            updateScales(currentData, null, currentYLabel);
+            drawBars(currentData);
+
+            timeRangeSelect.addEventListener('change', () => {
+                currentTimeRange = timeRangeSelect.value;
+                updateChart();
+            });
+
+            document.getElementById('toggle-line').addEventListener('change', () => {
+                updateChart();
+            });
+
+            document.querySelectorAll('input[name="yAxisOption"], input[name="aggregationOption"]').forEach(input => {
+                input.addEventListener('change', () => {
+                    updateChart();
+                });
+            });
+
+        });
+    </script>
+</body>
+
+

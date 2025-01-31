@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ML Multiple Plots</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+</head>
+<body>
+
+<!-- navigation Bar -->
+<div class="w3-top fixed-header">
+  <div class="w3-bar w3-white w3-wide w3-padding w3-card">
+    <a href="#home" class="w3-bar-item w3-button"><b>CSE6242</b> Project</a>
+    <div class="w3-right w3-hide-small">
+      <a href="#plot4.1" class="w3-bar-item w3-button">Average Trip Duration Prediction</a>
+      <a href="#plot4.2" class="w3-bar-item w3-button">Trip Court Prediction</a>
+    </div>
+  </div>
+</div>
+
+<!-- content -->
+<div class="w3-content w3-padding" style="max-width:1564px;">
+    <h2 class="w3-padding-32" id="plot4.1">Plot 4.1: Daily Average Trip Duration Prediction</h2>
+    <div class="plot-container">
+        {% include 'Plot4.1.html' %}
+    </div>
+    
+    <h2 class="w3-padding-32" id="plot4.2">Plot 4.2: Daily Trip Court Prediction</h2>
+    <div class="plot-container-2">
+        {% include 'Plot4.2.html' %}
+    </div>
+</div>
+
+<!-- footer -->
+<footer class="w3-center w3-black w3-padding-16">
+  <p>Powered by <a href="http://poloclub.gatech.edu/cse6242/2024Fall/" title="W3.CSS" target="_blank" class="w3-hover-text-blue">Team #12: DVA team 5 from CSE 6242 @ Georgia Tech</a></p>
+</footer>
+
+</body>
+</html>
+

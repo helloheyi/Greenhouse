@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive data analysis and prediction for NYC Citi Bike usage. Analyze, visualize, and predict bike sharing patterns with data-driven insights.">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>NYC Citi Bike Analysis Project</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            background-color: #f7f7f7;
+            color: #333;
+            margin: 0;
+        }
+
+        .w3-top {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        h1,
+        h3 {
+            color: #333;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-family: 'Lobster', cursive;
+        }
+
+        h3 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .fancy-button {
+            background-color: #0073e6;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 15px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+        }
+
+        .fancy-button:hover {
+            background-color: #005bb5;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .w3-container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 16px;
+        }
+
+        .component-title {
+            font-weight: bold;
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .card {
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .header-title {
+            font-family: 'Roboto', sans-serif;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        ul {
+            margin-left: 20px;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            padding: 20px 0;
+        }
+
+        footer a {
+            color: #ff9800;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- navbar (sit on top) -->
+    <div class="w3-top">
+        <div class="w3-bar w3-white w3-wide w3-padding w3-card">
+            <a href="#home" class="w3-bar-item w3-button"><b>CSE6242</b> Project</a>
+            <div class="w3-right w3-hide-small">
+                <a href="#about" class="w3-bar-item w3-button">About</a>
+                <a href="#visualization" class="w3-bar-item w3-button">Visualization</a>
+                <a href="#prediction" class="w3-bar-item w3-button">Prediction</a>
+                <a href="#contact" class="w3-bar-item w3-button">Contact</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- header -->
+    <header class="w3-display-container w3-content w3-wide" style="max-width:1500px; height: 350px; background-image: url('https://images.unsplash.com/photo-1581091012184-3d92b51cd29e'); background-size: cover; background-position: center;" id="home">
+        <div class="w3-display-middle w3-center">
+            <h1 class="w3-xxxlarge w3-text-white header-title">Analyzing and Predicting<br>NYC Citi Bike</h1>
+        </div>
+    </header>
+
+    <!-- page content -->
+    <div class="w3-content w3-padding" style="max-width:1564px">
+
+        <!-- about Section -->
+        <div class="w3-container w3-padding-32" id="about">
+            <h3 class="w3-border-bottom w3-border-light-grey w3-padding-16">About</h3>
+            <div class="card">
+                <p>As an affordable and sustainable mode of travel, the bike share system has been demonstrated to reduce traffic congestion, decrease air pollution, enhance physical activity, and complement public transport. Citi Bike riders in NYC broke a monthly ridership record of over 4 million trips in August 2023. This project aims to analyze Citi Bike usage in NYC, focusing on creating an interactive dashboard to visualize spatial-temporal patterns of bike trips and applying machine learning models to predict daily Citi Bike ridership based on weather and temporal features.</p>
+                <p>Our project aims to improve operational efficiency and urban planning, leading to enhanced system performance and user satisfaction. Operators of Citi Bike and similar systems can benefit from these tools to better understand usage patterns, predict peak demand periods, and ensure bikes are available where and when they are needed. Additionally, the project aims to enhance the daily experience of users who rely on bikes for commuting, contributing to healthier lifestyles and reducing environmental impact.</p>
+            </div>
+        </div>
+
+        <!-- instruction Section -->
+        <div class="w3-container w3-padding-32" id="visualization">
+            <h3 class="w3-border-bottom w3-border-light-grey w3-padding-16">Visualization</h3>
+            
+            <!-- visualization Section -->
+            <div class="card">
+                <p class="component-title">&bull; Visualize Bike Share Usage</p>
+                <p>We have developed an interactive dashboard to visualize the spatial and temporal patterns of Citi Bike trips. This dashboard includes a variety of visualization tools to explore data in different formats, such as:</p>
+                <ul>
+                    <li>Line charts</li>
+                    <li>Bar charts and stacked bar charts</li>
+                    <li>Maps with customizable filters for detailed data analysis</li>
+                </ul>
+
+                <!-- Plot 1 -->
+                <div class="plot-section">
+                    <h4 class="component-title">Plot 1: Monthly Aggregation Bar Chart</h4>
+                    <p>This interactive bar chart aggregates Citi Bike trip data by month. It includes multiple options for users to filter and customize the data view by clicking the <span style="font-size: 24px;">⚙</span> button. The interactive design, including hover values and customizable settings, enables detailed exploration of monthly ride data, providing insights into variations and usage trends across different bike types, metrics, and membership categories.</p>
+                    <ul>
+                        <li><strong>Chart Type:</strong> Displays bar charts, with optional stacked bars for a deeper breakdown.</li>
+                        <li><strong>Moving Average Line:</strong> A six-month moving average line is included to help highlight trends. It can be toggled on or off.</li>
+                        <li><strong>Y-Axis Metrics:</strong> Users can switch between different metrics for analysis:
+                            <ul>
+                                <li>Number of Rides</li>
+                                <li>Time Duration</li>
+                                <li>Distance</li>
+                            </ul>
+                        </li>
+                        <li><strong>Aggregation Options:</strong> View data in different forms:
+                            <ul>
+                                <li>Overall aggregated rides</li>
+                                <li>Broken down by rideable type (e.g., electric vs. classic bikes)</li>
+                                <li>By membership type (e.g., members vs. casual riders)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Interactive Features:</strong> Use customizable filters to explore:
+                            <ul>
+                                <li><strong>Rideable Type Filter:</strong> Split the data into classic (green) and electric bikes (orange), with hover-over details for specific ride counts and dates.</li>
+                                <li><strong>Time Range Selection:</strong> A dropdown menu allows users to focus on specific time periods.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    
+                </div>
+
+                <!-- Plot 2 -->
+                <div class="plot-section">
+                    <h4 class="component-title">Plot 2: Station-Level Trip Counts</h4>
+                    <p>This interactive plot shows Citi Bike station trip counts across New York City. It features a map of stations represented by circles, as well as two bar charts displaying the top 10 pickup and return stations for the selected year.This interactive plot helps users explore detailed station-level trip data across different timeframes, making it easier to identify high-usage stations and usage patterns throughout New York City. </p>
+                    <ul>
+                        <li><strong>Map Display:</strong>
+                            <ul>
+                                <li><strong>Circle Markers:</strong> Each station is represented by a circle. Size and color intensity indicate trip counts, with darker, larger circles representing higher volumes.</li>
+                                <li><strong>Hover Feature:</strong> Hovering over a station reveals the station name and specific trip count (e.g., "2 Ave & E 55 St" showing a trip count of 19).</li>
+                                <li><strong>Color Legend:</strong> A color scale at the bottom left helps interpret the trip counts, with darker shades indicating higher usage.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Bar Charts:</strong> Displays the top 10 stations.
+                            <ul>
+                                <li><strong>Pickup Stations:</strong> Shows the top 10 stations for pickups, with "W 21 St & 6 Ave" leading with approximately 400 trips.</li>
+                                <li><strong>Return Stations:</strong> Displays the top 10 return stations, with "W 21 St & 6 Ave" ranking similarly as a top return location.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Year Filter:</strong> Users can filter the bar chart data by year, enabling them to observe trends and changes over time.</li>
+                    </ul>
+                
+                </div>
+
+                <!-- Plot 3 -->
+                <div class="plot-section">
+                    <h4 class="component-title">Plot 3: Station Connectivity Map</h4>
+                    <p>This interactive map provides a dynamic visualization of Citi Bike stations, featuring hover details and connection insights. This setup allows users to explore Citi Bike station connectivity and travel patterns, offering both individual station information and network-level insights when hovering over different stations.</p>
+                    <ul>
+                        <li><strong>Hover Information Display:</strong> When hovering over a station, a label appears displaying detailed information about the station (e.g., "E 72 St & York Ave" or "Greenwich St & W Houston St").</li>
+                        <li><strong>Connectivity Visualization:</strong> Hovering over a station also triggers red lines to appear, showing direct connections to other stations, representing trip routes associated with that station.</li>
+                        <li><strong>Station Markers:</strong> Each station is represented by a blue circle, where the circle size reflects the station's usage volume, providing a quick visual reference for station activity.</li>
+                    </ul>
+                </div>
+                <p>To explore the visualizations presented above in greater detail, please click the button below.</p>
+                <button class="fancy-button" onclick="location.href = '/mainpage';">Explore Bike Share Visualizations</button>
+                </div>
+        </div>
+        <!-- prediction Section -->
+        <div class="w3-container w3-padding-32" id="prediction">
+            <h3 class="w3-border-bottom w3-border-light-grey w3-padding-16">Prediction</h3>
+            <div class="card">
+                <p class="component-title">&bull; Predict Bike Share Ridership</p>
+                <p>Predicting bike share ridership is crucial for effective transportation demand management. We applied machine learning models in Python to predict daily Citi Bike ridership, considering various weather and temporal features. These predictions help in planning resources to ensure availability and improve operational efficiency.</p>
+
+                <!-- Plot 4.1 -->
+                <div class="plot-section">
+                    <h4 class="component-title">Plot 4.1: Averaged Trip Duration Prediction with 14-Day Moving Average</h4>
+                    <p>This plot illustrates the actual versus predicted Citi Bike trip durations over time using a 14-day moving average to smooth out the data trends. The chart includes both the training and testing periods, clearly divided for clarity.</p>
+                    
+                    <ul>
+                        <li><strong>Axes:</strong>
+                            <ul>
+                                <li><strong>X-Axis (Date):</strong> Displays the timeline from early 2022 to late 2024.</li>
+                                <li><strong>Y-Axis (Averaged Trip Duration in Minutes):</strong> Represents the average trip duration, ranging from 8 to 19 minutes.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Training vs. Testing Period:</strong>
+                            <ul>
+                                <li>The chart is divided into training and testing periods, indicated by a vertical dashed line. The left side represents the training set (blue background), while the right side represents the testing set (pink background).</li>
+                            </ul>
+                        </li>
+                        <li><strong>14-Day Moving Average Lines:</strong>
+                            <ul>
+                                <li><strong>Actual Trip Duration:</strong> Blue line.</li>
+                                <li><strong>Linear Regression Predictions:</strong> Yellow line.</li>
+                                <li><strong>Random Forest Predictions:</strong> Green line.</li>
+                                <li><strong>K-Nearest Neighbors (KNN) Predictions:</strong> Purple line.</li>
+                                <li><strong>Gradient Boosting Predictions:</strong> Red line.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Observations:</strong>
+                            <ul>
+                                <li>The 14-day moving averages provide a clearer view of trends by reducing noise in the data.</li>
+                                <li>Most prediction models align closely with actual trends, though deviations can be observed, particularly with KNN and Gradient Boosting models at certain periods.</li>
+                                <li>The legend displays Adjusted R-squared values for each model. The Linear Regression model shows the highest Adjusted R-squared value (0.80), indicating it best captures the underlying linear trends in the data.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Plot 4.2 -->
+                <div class="plot-section">
+                    <h4 class="component-title">Plot 4.2: Trip Count Prediction with 14-Day Moving Average</h4>
+                    <p>This plot presents the actual versus predicted daily trip counts using a 14-day moving average to visualize overall patterns more clearly. The chart is divided into training and testing segments.</p>
+
+                    <ul>
+                        <li><strong>Axes:</strong>
+                            <ul>
+                                <li><strong>X-Axis (Date):</strong> Displays the timeline from early 2022 to late 2024.</li>
+                                <li><strong>Y-Axis (Trip Count):</strong> Represents the daily trip count, ranging from approximately 20,000 to 200,000 trips.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Training vs. Testing Period:</strong>
+                            <ul>
+                                <li>The chart is divided into training and testing periods, indicated by a vertical dashed line. The left side represents the training set (blue background), while the right side represents the testing set (pink background).</li>
+                            </ul>
+                        </li>
+                        <li><strong>14-Day Moving Average Lines:</strong>
+                            <ul>
+                                <li><strong>Actual Trip Count:</strong> Blue line showing the actual recorded daily trip counts over time.</li>
+                                <li><strong>Linear Regression Predictions:</strong> Orange line.</li>
+                                <li><strong>Random Forest Predictions:</strong> Green line.</li>
+                                <li><strong>K-Nearest Neighbors (KNN) Predictions:</strong> Purple line.</li>
+                                <li><strong>Gradient Boosting Predictions:</strong> Red line.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Observations:</strong>
+                            <ul>
+                                <li>The 14-day moving averages effectively reduce data noise, helping to highlight general trends.</li>
+                                <li>Random Forest and Gradient Boosting models align well with actual data trends, while the KNN and Linear Regression models show slight deviations during certain periods.</li>
+                                <li>The legend shows Adjusted R-squared values for each model. The Gradient Boosting model has the highest Adjusted R-squared value (0.88), suggesting its strong ability to capture complex, non-linear relationships in the data.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <p>To explore the visualizations presented above in greater detail, please click the button below.</p>
+                <button class="fancy-button" onclick="location.href = '/mlpage';">Explore Bike Share Prediction Models</button>
+                </div>
+        </div>
+
+        <!-- contact Section -->
+        <div class="w3-container w3-padding-32" id="contact">
+            <h3 class="w3-border-bottom w3-border-light-grey w3-padding-16">Contact</h3>
+            <div class="card">
+                <p>For any inquiries or further information regarding this project, please feel free to reach out to any of our team members:</p>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li><strong>Haoyun Wang</strong></li>
+                    <li><strong>Xin Liu</strong></li>
+                    <li><strong>Yi He</strong></li>
+                    <li><strong>Mingming Wang</strong></li>
+                    <li><strong>Zheqi Chen</strong></li>
+                    <li><strong>Yujie Sun</strong></li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- footer -->
+    <footer class="w3-center w3-black w3-padding-16">
+        <p>Powered by <a href="http://poloclub.gatech.edu/cse6242/2024Fall/" title="W3.CSS" target="_blank" class="w3-hover-text-blue">Team #12: DVA team 5 from CSE 6242 @ Georgia Tech</a></p>
+    </footer>
+
+</body>
+
+</html>
+

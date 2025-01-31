@@ -1,0 +1,155 @@
+
+<div id="map-plot3"></div>
+<div id="tooltip-plot3" class="tooltip"></div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<div id="map-plot3"></div>
+<div id="tooltip-plot3" class="tooltip"></div>
+
+
+<script>
+    (function() {
+        const map = L.map('map-plot3').setView([40.733, -74.036], 14);
+        const tooltip = d3.select("#tooltip-plot3");
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        
+        const svg = d3.select(map.getPanes().overlayPane).append("svg");
+        const g = svg.append("g").attr("class", "leaflet-zoom-hide");
+        
+        function projectPoint(lat, lon) {
+            const point = map.latLngToLayerPoint(new L.LatLng(lat, lon));
+            this.stream.point(point.x, point.y);
+        }
+        
+        const transform = d3.geoTransform({point: projectPoint});
+        const path = d3.geoPath().projection(transform);
+        
+        d3.csv("/static/CitiBikedata.csv").then(function(data) {
+            let graph = {
+                nodes: {},
+                edges: []
+            };
+            console.log(data);
+            data.forEach(function(d) {
+                d.start_lat = +d.start_lat;
+                d.start_lng = +d.start_lng;
+                d.end_lat = +d.end_lat;
+                d.end_lng = +d.end_lng;
+                
+                if (!graph.nodes[d.start_station_id]) {
+                    graph.nodes[d.start_station_id] = {
+                        id: d.start_station_id,
+                        name: d.start_station_name,
+                        lat: d.start_lat,
+                        lon: d.start_lng,
+                        out_degree: 0,
+                        in_degree: 0
+                    };
+                }
+                
+                if (!graph.nodes[d.end_station_id]) {
+                    graph.nodes[d.end_station_id] = {
+                        id: d.end_station_id,
+                        name: d.end_station_name,
+                        lat: d.end_lat,
+                        lon: d.end_lng,
+                        out_degree: 0,
+                        in_degree: 0
+                    };
+                }
+                
+                graph.edges.push({
+                    source: d.start_station_id,
+                    target: d.end_station_id
+                });
+                
+                graph.nodes[d.start_station_id].out_degree += 1;
+                graph.nodes[d.end_station_id].in_degree += 1;
+            });
+            
+            let nodesArray = Object.values(graph.nodes);
+            
+            const nodeRadiusScale = d3.scaleLinear()
+                .domain([0, d3.max(nodesArray, d => d.out_degree)])
+                .range([5, 10]);
+            
+            const stationMarkers = g.selectAll("circle")
+                .data(nodesArray)
+                .enter()
+                .append("circle")
+                .attr("class", "station-plot3")
+                .attr("r", d => nodeRadiusScale(d.out_degree))
+                .attr("fill", "steelblue")
+                .attr("stroke", "#fff")
+                .on("mouseover", handleMouseOver)
+                .on("mouseout", handleMouseOut);
+            
+            function handleMouseOver(event, d) {
+                tooltip.style("display", "block")
+                    .html(d.name)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+                
+                d3.select(this)
+                    .attr("fill", "orange")
+                    .attr("r", nodeRadiusScale(d.out_degree) * 1.5);
+                
+                g.selectAll(".edge")
+                    .data(graph.edges.filter(e => e.source === d.id))
+                    .enter()
+                    .append("line")
+                    .attr("class", "edge")
+                    .attr("x1", e => map.latLngToLayerPoint([graph.nodes[e.source].lat, graph.nodes[e.source].lon]).x)
+                    .attr("y1", e => map.latLngToLayerPoint([graph.nodes[e.source].lat, graph.nodes[e.source].lon]).y)
+                    .attr("x2", e => map.latLngToLayerPoint([graph.nodes[e.target].lat, graph.nodes[e.target].lon]).x)
+                    .attr("y2", e => map.latLngToLayerPoint([graph.nodes[e.target].lat, graph.nodes[e.target].lon]).y)
+                    .attr("stroke", "red")
+                    .attr("stroke-width", 1);
+            }
+            
+            function handleMouseOut(event, d) {
+                tooltip.style("display", "none");
+                
+                d3.select(this)
+                    .attr("fill", "steelblue")
+                    .attr("r", nodeRadiusScale(d.out_degree));
+                
+                g.selectAll(".edge").remove();
+            }
+            
+            function update() {
+                const bounds = map.getBounds();
+                const topLeft = map.latLngToLayerPoint(bounds.getNorthWest());
+                const bottomRight = map.latLngToLayerPoint(bounds.getSouthEast());
+                
+                svg.style("width", (bottomRight.x - topLeft.x) + "px")
+                    .style("height", (bottomRight.y - topLeft.y) + "px")
+                    .style("left", topLeft.x + "px")
+                    .style("top", topLeft.y + "px");
+                
+                g.attr("transform", "translate(" + -topLeft.x + "," + -topLeft.y + ")");
+                
+                stationMarkers
+                    .attr("cx", d => map.latLngToLayerPoint([d.lat, d.lon]).x)
+                    .attr("cy", d => map.latLngToLayerPoint([d.lat, d.lon]).y);
+                
+                g.selectAll(".edge")
+                    .attr("x1", e => map.latLngToLayerPoint([graph.nodes[e.source].lat, graph.nodes[e.source].lon]).x)
+                    .attr("y1", e => map.latLngToLayerPoint([graph.nodes[e.source].lat, graph.nodes[e.source].lon]).y)
+                    .attr("x2", e => map.latLngToLayerPoint([graph.nodes[e.target].lat, graph.nodes[e.target].lon]).x)
+                    .attr("y2", e => map.latLngToLayerPoint([graph.nodes[e.target].lat, graph.nodes[e.target].lon]).y);
+            }
+            
+            map.on("zoom", update);
+            map.on("move", update);
+            update();
+        });
+
+    })();
+</script>
+
