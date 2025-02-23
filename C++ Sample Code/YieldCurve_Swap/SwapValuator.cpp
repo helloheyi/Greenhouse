@@ -27,10 +27,8 @@ double SwapValuator::valueFixedLeg(){
 double SwapValuator::valueFloatingLeg(){
     double pv = 0.0;
     int paymentInterval =360 / paymentFrequency;
-    // Corrected to bind to a const reference: get the forward rates
-    const std::vector<double>&forwardRates = ycb.getForwardRates(); // Get the forward rates
-
-    
+    //   get the forward rates
+    const std::vector<double>&forwardRates = ycb.getForwardRates(); 
     for (int day = paymentInterval, ii = 0; day <= maturityDays && ii<forwardRates.size(); day += paymentInterval, ++ii){
         double forwardRate = forwardRates[ii];
         // payment
@@ -42,12 +40,10 @@ double SwapValuator::valueFloatingLeg(){
 }
 
 double SwapValuator::netSwapValue() {
-    
-    // Convert leg1 to lowercase for case-insensitive comparison
+    // convert leg1 to lowercase for case-insensitive comparison
     std::string leg1Lower = leg1;
-    // Make a copy to transform as all low char
+    // make a copy to transform as all low char
     std::transform(leg1Lower.begin(), leg1Lower.end(), leg1Lower.begin(),[](unsigned char c){ return std::tolower(c); });
-
     if (leg1Lower == "long") {
         return valueFixedLeg() - valueFloatingLeg();
     } else {
