@@ -14,12 +14,8 @@
 #include <string>
 
 class YieldCurveBuilder {
-    //constructor
 public:
     YieldCurveBuilder(const std::vector<MarketQuote> & inputQuotes);
-        // You can call bootstrapDiscountFactors() here if you want to automatically calculate
-        // the discount factors as soon as the YieldCurveBuilder is instantiated
-    
     //deconstructor
     virtual ~YieldCurveBuilder(){};
     
@@ -31,10 +27,10 @@ public:
 
     
 private:
-    std::vector<MarketQuote> quotes; // Renamed for clarity
-    std::vector<double> discountFactors; // Stores discount factors for each maturity
-    std::vector<double> forwardRates; // Stores forward rates between intervals
+    std::vector<MarketQuote> quotes; 
+    std::vector<double> discountFactors; 
+    std::vector<double> forwardRates;
     
 };
 
-#endif /* YieldCurveBuilder_hpp */
+#endif 
