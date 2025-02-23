@@ -6,9 +6,7 @@
 //
 #include "YieldCurveBuilder.hpp"
 
-// Utility function for linear interpolation
 YieldCurveBuilder::YieldCurveBuilder(const std::vector<MarketQuote>& inputQuotes) : quotes(inputQuotes) {
-    // Implementation
 }
 
 double YieldCurveBuilder::linearInterpolate(int day) {
@@ -28,37 +26,25 @@ double YieldCurveBuilder::linearInterpolate(int day) {
     return 1.0 ;
 }
 
-// Calculate discount factor for a specific day
 void YieldCurveBuilder::bootstrapDiscountFactors() {
-    // Initialize discount factors vector with the same size
     discountFactors.resize(quotes.size(), 0.0);
-    
-    // Calculate the first discount factor directly from the first quote
     int firstDay = quotes[0].days;
     double firstRate = quotes[0].rate;
     discountFactors[0] = 1.0 / (1.0 + firstRate * firstDay / 360.0);
     
-    // Bootstrapping subsequent discount factors
     for (size_t ii = 1; ii < quotes.size(); ++ii) {
         int currentDay = quotes[ii].days;
         double currentRate = quotes[ii].rate;
-        
-        // Calculate the time from the last known discount factor
         int lastDay = quotes[ii - 1].days;
         int dayDelta = currentDay - lastDay;
-        
-        // Calculate the current discount factor
         discountFactors[ii] = discountFactors[ii - 1] / (1.0 + currentRate * dayDelta / 360.0);
     }
 }
 
 
 
-void YieldCurveBuilder::calculateForwardRates() {
-    
-    // One less forward rate than discount factors
+void YieldCurveBuilder::calculateForwardRates() {    
     forwardRates.resize(quotes.size() -1 , 0.0);
-    // use discount factors to get forward rates
     for (size_t ii = 0; ii < quotes.size() - 1; ++ii) {
         double D1 = discountFactors[ii];
         double D2 = discountFactors[ii+1];
