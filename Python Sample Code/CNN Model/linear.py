@@ -57,10 +57,6 @@ class Linear:
         :return: nothing but dx, dw, and db of self should be updated
         """
         x = self.cache
-        
-        #############################################################################
-        # TODO: Implement the linear backward pass.                                 #
-        #############################################################################
         ## dout (10,5)
        
         ## dout/db = 1  
