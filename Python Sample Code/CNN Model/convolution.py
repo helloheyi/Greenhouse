@@ -48,9 +48,6 @@ class Conv2D:
         """
         out = None
         #############################################################################
-        # TODO: Implement the convolution forward pass.                             #
-        # Hint: 1) You may use np.pad for padding.                                  #
-        #       2) You may implement the convolution with loops                     #
         # arr = [1, 3, 2, 5, 4] 
         # padding array using CONSTANT mode 
         # pad_arr = np.pad(arr, (3, 2), 'constant',  constant_values=(6, 4)) 
@@ -78,10 +75,6 @@ class Conv2D:
                         ## move kneral window 
                         matrix = x_padded[n,:,h * self.stride:np.shape(self.weight)[2] + h * self.stride,w * self.stride:np.shape(self.weight)[3]+ w * self.stride]
                         out[n,c,h,w] = np.sum(matrix*self.weight[c, :, :, :]) + self.bias[c]
-                        
-                        
-
-
         self.cache = x
         return out
 
@@ -92,12 +85,6 @@ class Conv2D:
         :return: nothing but dx, dw, and db of self should be updated
         """
         x = self.cache
-        #############################################################################
-        # TODO: Implement the convolution backward pass.                            #
-        # Hint:                                                                     #
-        #       1) You may implement the convolution with loops                     #
-        #       2) don't forget padding when computing dx                           #
-        #############################################################################
        
         ## dout/db = 1  => (out.channels)
         db = np.sum(dout, axis=(0,2,3))
