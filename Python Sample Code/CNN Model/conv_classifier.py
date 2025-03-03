@@ -45,10 +45,6 @@ class ConvNet:
         """
         probs = None
         loss = None
-        #############################################################################
-        # TODO:                                                                     #
-        #    1) Implement forward pass of the model                                 #
-        #############################################################################
         for fun in self.modules: 
             x = fun.forward(x)
         
@@ -64,10 +60,6 @@ class ConvNet:
         The backward pass of the model
         :return: nothing but dx, dw, and db of all modules are updated
         """
-        #############################################################################
-        # TODO:                                                                     #
-        #    1) Implement backward pass of the model                                #
-        #############################################################################
         ## loop for dx 
         self.criterion.backward()
         dx = self.criterion.dx
@@ -79,14 +71,6 @@ class ConvNet:
         self.dx = dx
         self.dw = fun.dw
         self.db = fun.db
-
-        
-        
-        
-        
-        
-        
-        
         
         
 # if __name__ == "__main__":
