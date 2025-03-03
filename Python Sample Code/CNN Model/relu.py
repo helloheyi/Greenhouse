@@ -18,11 +18,6 @@ class ReLU:
         :return: output of the ReLU function
         '''
         out = np.maximum(0,x)
-
-        #############################################################################
-        # TODO: Implement the ReLU forward pass.                                    #
-        #############################################################################
-
         self.cache = x
         return out
     
@@ -31,9 +26,6 @@ class ReLU:
         :param dout: the upstream gradients
         :return:
         """
-        #############################################################################
-        # TODO: Implement the ReLU backward pass.                                   #
-        #############################################################################
         dx, x = None, self.cache
         
         out = np.where(x <= 0, 0, 1) 
