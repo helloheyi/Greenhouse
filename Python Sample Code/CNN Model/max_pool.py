@@ -21,13 +21,6 @@ class MaxPooling:
         :return: The output by max pooling with kernel_size and stride
         """
         out = None
-        #############################################################################
-        # TODO: Implement the max pooling forward pass.                             #
-        # Hint:                                                                     #
-        #       1) You may implement the process with loops                         #
-        #############################################################################
-
-       
        ## out dimension is (N,C,(H-kernel_size)/stride+1,(W-kernel_size)/stride+1)
         H_dimout = (np.shape(x)[2] -  self.kernel_size)//self.stride +1
         W_dimout = (np.shape(x)[3] -  self.kernel_size)//self.stride +1
@@ -71,15 +64,6 @@ class MaxPooling:
         :return: nothing, but self.dx should be updated
         """
         x, index_out = self.cache
-        #############################################################################
-        # TODO: Implement the max pooling backward pass.                            #
-        # Hint:                                                                     #
-        #       1) You may implement the process with loops                     #
-        #       2) You may find np.unravel_index useful                             #
-       
-        #############################################################################
-        
-
         ## df(max(x))/ x => max pooling is 1 at max value otherwise is 0
         ## dx is the same size as x so create a empty matrix 
         dx = np.zeros(x.shape)
